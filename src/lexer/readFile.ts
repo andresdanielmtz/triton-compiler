@@ -17,7 +17,7 @@ const isIdentifierPart = (character: string): boolean => /^[A-Za-z0-9_]$/.test(c
  * It will be a string containining the entirety of the source code, incluiding whitespaces and comments, as they are needed for the lexer to generate the correct tokens.
  */
 export const readTritonFile = (fileName: string): string => {
-  const tritonPath = path.resolve(__dirname, `../input/${fileName}.py`);
+  const tritonPath = path.resolve(__dirname, `../../input/${fileName}.py`);
   const sourceCode: string = fs.readFileSync(tritonPath, "utf-8");
   return sourceCode;
 };
