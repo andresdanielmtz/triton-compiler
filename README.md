@@ -1,12 +1,24 @@
-# Lexer
+# Triton Compiler
 
-## How to run the project
+A Triton compiler implemented in TypeScript. The project is structured into two main components:
+- **Lexer**: implemented and tested
+- **Parser**: currently being implemented
+
+## Getting started
 
 ```bash
 npm i
-npm run build
-npm start
 ```
+
+## Scripts
+
+- Build everything: `npm run build`
+- Build lexer only (emits to `dist/lexer`): `npm run build-lexer`
+- Build parser only (emits to `dist/parser`): `npm run build-parser`
+
+- Run lexer: `npm run start-lexer`
+- Build + run lexer (quick local loop): `npm run dev-lexer`
+- Print lexer tokens: `npm run tokens-lexer`
 
 ## Input
 
@@ -20,15 +32,14 @@ See `/input` for sample Triton files.
 .
 ├── input/
 │   └── triton.py
-├── scripts/
 ├── src/
-│   ├── index.ts
-│   ├── readFile.ts
-│   └── constants/
-│       ├── automaton.ts
-│       ├── regex.ts
-│       ├── tokens.ts
-│       └── transitionTable.ts
+│   ├── lexer/
+│   │   ├── index.ts
+│   │   ├── readFile.ts
+│   │   ├── constants/
+│   │   └── tests/
+│   └── parser/
+│       └── index.ts
 ├── package.json
 ├── README.md
 ├── TODO.md
@@ -45,7 +56,7 @@ npm run test
 
 ## Tests
 
-The project uses Node's built-in test runner. The tests are written in TypeScript under `src/tests/`, compiled to `dist/tests/`, and then executed from the compiled output.
+The project uses Node's built-in test runner. The lexer tests are written in TypeScript under `src/lexer/tests/`, compiled to `dist/lexer/tests/`, and then executed from the compiled output.
 
 Run them with:
 
