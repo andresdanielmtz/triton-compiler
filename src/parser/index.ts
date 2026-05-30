@@ -10,6 +10,8 @@ const readTokens = (): Token[] => {
     return tokens;
 }
 
-// For now, just print the tokens
-const tokenList = readTokens();
-console.log(tokenList);
+const main = () => {
+    const tokenList: Token[] = readTokens();
+    console.log(tokenList);
+}
+main();
