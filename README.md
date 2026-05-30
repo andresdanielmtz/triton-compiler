@@ -12,13 +12,14 @@ npm i
 
 ## Scripts
 
-- Build everything: `npm run build`
-- Build lexer only (emits to `dist/lexer`): `npm run build-lexer`
-- Build parser only (emits to `dist/parser`): `npm run build-parser`
-
-- Run lexer: `npm run start-lexer`
-- Build + run lexer (quick local loop): `npm run dev-lexer`
-- Print lexer tokens: `npm run tokens-lexer`
+| Description | Command |
+| --- | --- |
+| Build everything | `npm run build` |
+| Build lexer only (emits to `dist/lexer`) | `npm run build-lexer` |
+| Build parser only (emits to `dist/parser`) | `npm run build-parser` |
+| Run lexer | `npm run start-lexer` |
+| Build + run lexer (quick local loop) | `npm run dev-lexer` |
+| Print lexer tokens | `npm run tokens-lexer` |
 
 ## Input
 
