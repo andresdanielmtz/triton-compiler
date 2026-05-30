@@ -4,6 +4,8 @@ A Triton compiler implemented in TypeScript. The project is structured into two 
 - **Lexer**: implemented and tested
 - **Parser**: currently being implemented
 
+Original Lexer implementation got made in [this repo](https://github.com/andresdanielmtz/TC3002B-Lexer), but it was moved here to be part of the same project as the other parts of the compiler.
+
 ## Getting started
 
 ```bash
