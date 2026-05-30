@@ -12,8 +12,17 @@ const readTokens = (): Token[] => {
     return tokens;
 }
 
+/**
+ * Parsing logic, currently a placeholder.
+ */
+const parseTokens = (tokens: Token[]) => {
+    for (const token of tokens) {
+        console.log(`Token: ${token.type} (${token.value}) at line ${token.line}, column ${token.column}`);
+    }
+}
+
 const main = () => {
     const tokenList: Token[] = readTokens();
-    console.log(tokenList);
+    parseTokens(tokenList);
 }
 main();
