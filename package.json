@@ -13,6 +13,7 @@
     "build-parser": "tsc -p tsconfig.parser.json",
     "start-lexer": "node dist/lexer/index.js",
     "dev-lexer": "npm run build-lexer && node dist/lexer/index.js",
+    "dev-parser": "npm run build-parser && node dist/parser/index.js",
     "tokens-lexer": "npm run build-lexer && node dist/lexer/index.js --tokens"
   },
   "devDependencies": {
