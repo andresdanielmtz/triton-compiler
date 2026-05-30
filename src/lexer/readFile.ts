@@ -177,6 +177,9 @@ export const tokenizeSource = (sourceCode: string): Token[] => {
     tokens.push(...tokenizeLine(sourceCode.slice(lineStartIndex), line));
   }
 
+  // Add EOF token to signify the end of the source code.
+  tokens.push({ type: TOKEN_TYPE.EOF, value: "", line, column: 1 });
+
   return tokens;
 };
 
