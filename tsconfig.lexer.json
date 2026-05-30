@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src/lexer",
+    "outDir": "./dist/lexer"
+  },
+  "include": ["src/lexer/**/*.ts"]
+}

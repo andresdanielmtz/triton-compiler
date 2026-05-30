@@ -1,0 +1,22 @@
+{
+  "name": "triton-compiler",
+  "version": "1.0.0",
+  "description": "A proper triton compiler.",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run build && node --test dist/tests/**/*.test.js",
+    "build": "npm run build-lexer && npm run build-parser",
+    "build-lexer": "tsc -p tsconfig.lexer.json",
+    "build-parser": "tsc -p tsconfig.parser.json",
+    "start-lexer": "node dist/lexer/index.js",
+    "dev-lexer": "npm run build-lexer && node dist/lexer/index.js",
+    "tokens-lexer": "npm run build-lexer && node dist/lexer/index.js --tokens"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
+  }
+}

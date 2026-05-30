@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src/parser",
+    "outDir": "./dist/parser"
+  },
+  "include": ["src/parser/**/*.ts"]
+}
