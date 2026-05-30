@@ -164,8 +164,69 @@ export const tokenizeSource = (sourceCode: string): Token[] => {
   let line = 1;
   let newlineMatch: RegExpExecArray | null;
 
+  const indentStack: number[] = [0];
+
+  // Helper method so that we can emit INDENT/DEDENT tokens based on the indentation level of each new line before tokenizing the line itself.
+  const isBlankOrCommentLine = (lineText: string): boolean => {
+    const trimmed = lineText.trimStart();
+    return trimmed.length === 0 || trimmed.startsWith("#");
+  };
+
+  const getIndentLength = (lineText: string, lineNumber: number): number => {
+    let indentLength = 0;
+
+    while (indentLength < lineText.length) {
+      const character = lineText[indentLength] ?? "";
+
+      if (character === " ") {
+        indentLength++;
+        continue;
+      }
+
+      if (character === "\t") {
+        console.warn("Python does not support tabs *and* spaces for indentation. Please use spaces only for indentation.");
+        throw new Error(`Tabs are not supported for indentation (line ${lineNumber}). Use spaces instead.`);
+      }
+
+      break;
+    }
+
+    return indentLength;
+  };
+
+  const emitIndentationTokens = (lineText: string, lineNumber: number): void => {
+    if (isBlankOrCommentLine(lineText)) {
+      return;
+    }
+
+    const indentLength = getIndentLength(lineText, lineNumber);
+    const currentIndent = indentStack[indentStack.length - 1] ?? 0;
+
+    if (indentLength > currentIndent) {
+      indentStack.push(indentLength);
+      tokens.push({ type: TOKEN_TYPE.INDENT, value: lineText.slice(0, indentLength), line: lineNumber, column: 1 });
+      return;
+    }
+
+    if (indentLength < currentIndent) {
+      // Pop the indent stack until we find a matching indent level or run out of indents. Emit a DEDENT token for each popped indent level.
+      while (indentStack.length > 1 && (indentStack[indentStack.length - 1] ?? 0) > indentLength) {
+        indentStack.pop();
+        tokens.push({ type: TOKEN_TYPE.DEDENT, value: "", line: lineNumber, column: 1 });
+      }
+
+      const newCurrentIndent = indentStack[indentStack.length - 1] ?? 0;
+      if (newCurrentIndent !== indentLength) {
+        console.warn(`Invalid dedent level at line ${lineNumber}. Expected one of: ${indentStack.join(", ")}.`);
+        throw new Error(`Invalid dedent level at line ${lineNumber}. Expected one of: ${indentStack.join(", ")}.`);
+      }
+    }
+  };
+
   while ((newlineMatch = newlineRegex.exec(sourceCode)) !== null) {
     const lineText = sourceCode.slice(lineStartIndex, newlineMatch.index);
+
+    emitIndentationTokens(lineText, line);
     tokens.push(...tokenizeLine(lineText, line));
     tokens.push({ type: TOKEN_TYPE.NEWLINE, value: newlineMatch[0], line, column: lineText.length + 1 });
 
@@ -174,7 +235,14 @@ export const tokenizeSource = (sourceCode: string): Token[] => {
   }
 
   if (lineStartIndex < sourceCode.length) {
-    tokens.push(...tokenizeLine(sourceCode.slice(lineStartIndex), line));
+    const lastLineText = sourceCode.slice(lineStartIndex);
+    emitIndentationTokens(lastLineText, line);
+    tokens.push(...tokenizeLine(lastLineText, line));
+  }
+
+  while (indentStack.length > 1) {
+    indentStack.pop();
+    tokens.push({ type: TOKEN_TYPE.DEDENT, value: "", line, column: 1 });
   }
 
   // Add EOF token to signify the end of the source code.
@@ -193,7 +261,7 @@ export const matchToken = (sourceInput: string, line: number, column: number): T
   const transitionTableTokenType = matchTransitionTableToken(sourceInput);
 
   switch (true) {
-    case transitionTableTokenType !== undefined:
+    case transitionTableTokenType !== undefined && transitionTableTokenType !== TOKEN_TYPE.IDENTIFIER:
       outputToken.type = transitionTableTokenType;
       break;
     case KEYWORD_REGEX_EXP.test(sourceInput):
