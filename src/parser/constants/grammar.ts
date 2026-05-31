@@ -1,3 +1,6 @@
+/**
+ * This file defines the context-free grammar for the Triton language.
+ */
 const GRAMMAR = `
 Program -> Kernel EOF
 Kernel -> Decorator FunctionDefinition
@@ -9,7 +12,7 @@ Block -> "{" Statement* "}"
 Statement -> VariableAssignment | ExpressionStatement
 VariableAssignment -> ID AssignmentOperator Expression ";"
 AssignmentOperator -> "=" | "+=" | "-=" | "*=" | "/="
-ExpressionStatement -> Expression ";"
+ExpressionStatement -> Expression ";")
 Expression -> Term (ArithmeticOperatorLevelOne Term)*
 ArithmeticOperatorLevelOne -> "+"|"-"
 Term -> Factor (ArithmeticOperatorLevelTwo Factor)*
