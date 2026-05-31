@@ -21,6 +21,9 @@ const parseTokens = (tokens: Token[]) => {
     }
 }
 
+/**
+ * Entry point for the parser.
+ */
 const main = () => {
     const tokenList: Token[] = readTokens();
     parseTokens(tokenList);
