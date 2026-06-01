@@ -34,8 +34,6 @@ export class Parser {
     // Filter by both type name and value to handle any lexer variations.
     const SKIP_TYPES = new Set([
       "NEWLINE", "NL", "WHITESPACE",
-      "INDENT",  // Python-style indent marker — your lexer emits these
-      "DEDENT",  // Python-style dedent marker
       "EOF",     // end-of-file sentinel
     ]);
 
@@ -148,7 +146,7 @@ export class Parser {
     this.expect(")");
     this.expect(":");
 
-    // Block (indent-delimited — we use implicit block via remaining tokens)
+    // Block (indent-delimited by INDENT/DEDENT tokens)
     const body = this.parseBlock();
 
     return { type: "KernelDefinition", decorator, name, params, body };
@@ -195,14 +193,32 @@ export class Parser {
   // ── Block & Statements ──────────────────────────────────────────────────────
 
   /**
-   * Block -> Statement*
-   * (Python-style indentation is already gone; we parse until EOF
-   *  or until we see a top-level "def"/"@" that starts a new kernel.)
+   * Block -> INDENT Statement* DEDENT
    */
   private parseBlock(): BlockNode {
     const statements: ASTNode[] = [];
+    let indentDepth = 0;
 
-    while (!this.isAtEnd() && !this.isNewKernelStart()) {
+    if (this.peek()?.type === "INDENT") {
+      indentDepth = 1;
+      this.advance();
+    }
+
+    while (!this.isAtEnd()) {
+      if (this.peek()?.type === "INDENT") {
+        indentDepth++;
+        this.advance();
+        continue;
+      }
+
+      if (this.peek()?.type === "DEDENT") {
+        this.advance();
+        indentDepth--;
+        if (indentDepth <= 0) break;
+        continue;
+      }
+
+      if (indentDepth <= 0 && this.isNewKernelStart()) break;
       statements.push(this.parseStatement());
     }
 
