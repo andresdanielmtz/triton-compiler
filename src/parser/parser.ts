@@ -211,7 +211,8 @@ export class Parser {
 
   /** True when the next token begins a new kernel (@) or top-level def. */
   private isNewKernelStart(): boolean {
-    return this.peek()?.value === "@";
+    const peek = this.peek()?.value;
+    return peek === "@" || peek === "def";
   }
 
   /**
