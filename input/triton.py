@@ -14,3 +14,18 @@ def vector_add_kernel(x_ptr, y_ptr, output_ptr, n_elements, BLOCK_SIZE: tl.const
     result = x + y;
     tl.store(output_ptr + offsets, result, mask);
 }
+
+@triton.jit
+def one(x): { y = (x + 1) * 2; }
+
+@triton.jit
+def f(a,b,c): { a = a + b * c; }
+
+@triton.jit
+def g(x): { tl.load(x); }
+
+@triton.jit
+def h(x): { y = foo(x, 1, (2+3)); }
+
+@triton.jit
+def p(x, BS: tl.constexpr): { y = tl.arange(0, BS); }
