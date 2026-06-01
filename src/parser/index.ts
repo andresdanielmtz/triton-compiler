@@ -32,6 +32,7 @@ const main = () => {
   fs.mkdirSync(OUTPUT_DIRECTORY, { recursive: true });
   fs.writeFileSync(AST_FILE, JSON.stringify(ast, null, 2), "utf-8");
   console.error(`\nAST written to ${AST_FILE}`);
+  console.error("VALID AST");
 };
 
 main();
