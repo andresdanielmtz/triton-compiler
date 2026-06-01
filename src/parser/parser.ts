@@ -34,6 +34,8 @@ export class Parser {
     // Filter by both type name and value to handle any lexer variations.
     const SKIP_TYPES = new Set([
       "NEWLINE", "NL", "WHITESPACE",
+      "INDENT",  // Python-style indent marker — your lexer emits these
+      "DEDENT",  // Python-style dedent marker
       "EOF",     // end-of-file sentinel
     ]);
 
@@ -63,9 +65,9 @@ export class Parser {
   }
 
   private advance(): Token {
-    const token = this.tokens[this.pos];
+    const token = this.tokens[this.pos]!;
     this.pos++;
-    return token!;
+    return token;
   }
 
   private isAtEnd(): boolean {
@@ -146,7 +148,7 @@ export class Parser {
     this.expect(")");
     this.expect(":");
 
-    // Block (indent-delimited by INDENT/DEDENT tokens)
+    // Block (indent-delimited — we use implicit block via remaining tokens)
     const body = this.parseBlock();
 
     return { type: "KernelDefinition", decorator, name, params, body };
@@ -193,42 +195,24 @@ export class Parser {
   // ── Block & Statements ──────────────────────────────────────────────────────
 
   /**
-   * Block -> INDENT Statement* DEDENT
+   * Block -> "{" Statement* "}"
+   * Grammar uses C-style braces, not Python indentation.
    */
   private parseBlock(): BlockNode {
+    this.expect("{");
     const statements: ASTNode[] = [];
-    let indentDepth = 0;
 
-    if (this.peek()?.type === "INDENT") {
-      indentDepth = 1;
-      this.advance();
-    }
-
-    while (!this.isAtEnd()) {
-      if (this.peek()?.type === "INDENT") {
-        indentDepth++;
-        this.advance();
-        continue;
-      }
-
-      if (this.peek()?.type === "DEDENT") {
-        this.advance();
-        indentDepth--;
-        if (indentDepth <= 0) break;
-        continue;
-      }
-
-      if (indentDepth <= 0 && this.isNewKernelStart()) break;
+    while (!this.isAtEnd() && !this.check("}")) {
       statements.push(this.parseStatement());
     }
 
+    this.expect("}");
     return { type: "Block", statements };
   }
 
-  /** True when the next token begins a new kernel (@) or top-level def. */
+  /** True when the next token begins a new kernel (@). */
   private isNewKernelStart(): boolean {
-    const peek = this.peek()?.value;
-    return peek === "@" || peek === "def";
+    return this.peek()?.value === "@";
   }
 
   /**
@@ -256,12 +240,13 @@ export class Parser {
   }
 
   /**
-   * VariableAssignment -> ID AssignmentOperator Expression
+   * VariableAssignment -> ID AssignmentOperator Expression ";"
    */
   private parseVariableAssignment(): VariableAssignmentNode {
     const name = this.advance().value;
     const operator = this.advance().value; // "=", "+=", etc.
     const right = this.parseExpression();
+    this.expect(";");
 
     return {
       type: "VariableAssignment",
@@ -272,10 +257,11 @@ export class Parser {
   }
 
   /**
-   * ExpressionStatement -> Expression
+   * ExpressionStatement -> Expression ";"
    */
   private parseExpressionStatement(): ExpressionStatementNode {
     const expression = this.parseExpression();
+    this.expect(";");
     return { type: "ExpressionStatement", expression };
   }
 
@@ -345,14 +331,6 @@ export class Parser {
    *   42                         → NumberLiteral
    */
   private parsePrimary(): ASTNode {
-    // Parenthesized expression:  "(" Expression ")"
-    if (this.check("(")) {
-        this.advance();
-        const expression = this.parseExpression();
-        this.expect(")");
-        return expression;
-    }
-
     const token = this.peek();
 
     // Number literal

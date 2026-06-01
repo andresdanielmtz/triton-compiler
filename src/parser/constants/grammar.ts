@@ -8,8 +8,8 @@ Decorator -> "@" "triton" "." "jit"
 FunctionDefinition -> "def" ID "(" ParamList ")" ":" Block
 ParamList -> ε | Param ("," Param)*
 Param -> ID (":" "tl" "." "constexpr")?
-Block -> Statement*
-Statement -> VariableAssignment | ExpressionStatement
+Block -> "{" Statement* "}"
+Statement -> VariableAssignment ";" | ExpressionStatement ";"
 VariableAssignment -> ID AssignmentOperator Expression
 AssignmentOperator -> "=" | "+=" | "-=" | "*=" | "/="
 ExpressionStatement -> Expression
