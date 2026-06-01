@@ -13,12 +13,17 @@ Statement -> VariableAssignment | ExpressionStatement
 VariableAssignment -> ID AssignmentOperator Expression
 AssignmentOperator -> "=" | "+=" | "-=" | "*=" | "/="
 ExpressionStatement -> Expression
-Expression -> Term (ArithmeticOperatorLevelOne Term)*
-ArithmeticOperatorLevelOne -> "+"|"-"
-Term -> Factor (ArithmeticOperatorLevelTwo Factor)*
-ArithmeticOperatorLevelTwo -> "*" | "/"
-Factor -> ID | NUMBER | FunctionCall | "(" Expression ")"
-FunctionCall -> (ID "." )? ID "(" (Expression ("," Expression)*)? ")"
+Expression -> Comparison
+Comparison -> Term (ComparisonOperator Term)*
+ComparisonOperator -> "<" | ">" | "<=" | ">=" | "==" | "!="
+Term -> Factor (ArithmeticOperatorLevelOne Factor)*
+ArithmeticOperatorLevelOne -> "+" | "-"
+Factor -> Primary (ArithmeticOperatorLevelTwo Primary)*
+ArithmeticOperatorLevelTwo -> "*" | "/" | "%"
+Primary -> ID | NUMBER | STRING | FunctionCall | MemberExpression | "(" Expression ")"
+MemberExpression -> ID "." ID
+FunctionCall -> (MemberExpression | ID) "(" (Arg ("," Arg)*)? ")"
+Arg -> (ID "=")? Expression
 `;
 
 export default GRAMMAR;
