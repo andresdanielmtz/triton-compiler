@@ -29,19 +29,35 @@ export class Parser {
   private tokens: Token[];
   private pos: number = 0;
 
-  constructor(tokens: Token[]) {
-    // Strip newlines — they guided the lexer but carry no AST meaning
-    this.tokens = tokens.filter((t) => t.type !== "NEWLINE");
+  constructor(tokens: Token[], debug = false) {
+    // Strip newlines — they guided the lexer but carry no AST meaning.
+    // Filter by both type name and value to handle any lexer variations.
+    const SKIP_TYPES = new Set([
+      "NEWLINE", "NL", "WHITESPACE",
+      "INDENT",  // Python-style indent marker — your lexer emits these
+      "DEDENT",  // Python-style dedent marker
+      "EOF",     // end-of-file sentinel
+    ]);
+
+    this.tokens = tokens.filter((t) => {
+      if (SKIP_TYPES.has(t.type)) return false;
+      if (t.value === "\n" || t.value === "\r\n" || t.value === "\r") return false;
+      return true;
+    });
+
+    if (debug) {
+      console.error("=== Tokens after filtering ===");
+      this.tokens.forEach((t, i) =>
+        console.error(`  [${i}] ${t.type.padEnd(12)} "${t.value}" @ ${t.line}:${t.column}`)
+      );
+      console.error("==============================\n");
+    }
   }
 
   // ── Cursor helpers ──────────────────────────────────────────────────────────
 
   private peek(): Token {
-    const token = this.tokens[this.pos];
-    if (!token) {
-      throw new SyntaxError(`Unexpected end of input at line ?, column ?`);
-    }
-    return token;
+    return this.tokens[this.pos]!;
   }
 
   private peekAt(offset: number): Token | undefined {
@@ -50,11 +66,8 @@ export class Parser {
 
   private advance(): Token {
     const token = this.tokens[this.pos];
-    if (!token) {
-      throw new SyntaxError(`Unexpected end of input at line ?, column ?`);
-    }
     this.pos++;
-    return token;
+    return token!;
   }
 
   private isAtEnd(): boolean {

@@ -9,7 +9,7 @@ import { Parser } from "./parser";
 // todo: replace with a more robust testing strategy that doesn't rely on
 //       reading from the output file.
 const readTokens = (): Token[] => {
-  const OUTPUT_DIRECTORY = path.resolve(__dirname, "../../output");
+  const OUTPUT_DIRECTORY = path.resolve(__dirname, "../output");
   const TOKENS_FILE = path.join(OUTPUT_DIRECTORY, "tokens.json");
   const tokensData = fs.readFileSync(TOKENS_FILE, "utf-8");
   return JSON.parse(tokensData) as Token[];
@@ -20,7 +20,7 @@ const readTokens = (): Token[] => {
 const main = () => {
   const tokenList: Token[] = readTokens();
 
-  const parser = new Parser(tokenList);
+  const parser = new Parser(tokenList, true); // debug=true: remove when working
   const ast = parser.parse();
 
   // Pretty-print the AST to console
