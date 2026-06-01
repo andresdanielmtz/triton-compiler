@@ -1,73 +1,40 @@
 /**
- * Regex patterns for Python keywords, operators, delimiters, and indentation.
+ * Regex patterns for the Triton subset supported by this project.
  */
 
-// Comparison operators
-export const LT = /</;
-export const GT = />/;
-export const LE = /<=/;
-export const GE = />=/;
-export const EQ = /==/;
-export const NE = /!=/;
-
-// Assignment operators
+// Operators (grammar subset)
+export const PLUS = /\+/;
+export const MINUS = /-/;
+export const TIMES = /\*/;
+export const DIVIDE = /\//;
 export const ASSIGN = /=/;
-export const PLUSEQ = /\+=/;
-export const MINUSEQ = /-=/;
-export const TIMESEQ = /\*=/;
-export const DIVEQ = /\/=/;
 
 /**
- * Single regex expression for supported comparison and assignment operators.
- *
- * Detected operators:
- * - <= (LE)
- * - >= (GE)
- * - == (EQ)
- * - != (NE)
- * - += (PLUSEQ)
- * - -= (MINUSEQ)
- * - *= (TIMESEQ)
- * - /= (DIVEQ)
- * - <  (LT)
- * - >  (GT)
- * - =  (ASSIGN)
+ * Single regex expression for every supported operator in the grammar.
  */
-export const OPERATOR_REGEX_EXP = /^(?:<=|>=|==|!=|\+=|-=|\*=|\/=|<|>|=)$/;
+export const OPERATOR_REGEX_EXP = /^(?:\+|-|\*|\/|=)$/;
 
 /**
  * Combined operator regex patterns for easier access.
  */
 export const operators = {
   OPERATOR: OPERATOR_REGEX_EXP,
-  LT,
-  GT,
-  LE,
-  GE,
-  EQ,
-  NE,
   ASSIGN,
-  PLUSEQ,
-  MINUSEQ,
-  TIMESEQ,
-  DIVEQ,
+  PLUS,
+  MINUS,
+  TIMES,
+  DIVIDE,
 };
 
 /**
  * Array of operator patterns with their names for iteration.
  */
 export const operatorList = [
-  { name: "LE", pattern: LE },
-  { name: "GE", pattern: GE },
-  { name: "EQ", pattern: EQ },
-  { name: "NE", pattern: NE },
-  { name: "LT", pattern: LT },
-  { name: "GT", pattern: GT },
+  { name: "PLUS", pattern: PLUS },
+  { name: "MINUS", pattern: MINUS },
+  { name: "TIMES", pattern: TIMES },
+  { name: "DIVIDE", pattern: DIVIDE },
   { name: "ASSIGN", pattern: ASSIGN },
-  { name: "PLUSEQ", pattern: PLUSEQ },
-  { name: "MINUSEQ", pattern: MINUSEQ },
-  { name: "TIMESEQ", pattern: TIMESEQ },
-  { name: "DIVEQ", pattern: DIVEQ },
 ];
 
 // Parentheses
@@ -88,6 +55,7 @@ export const COLON = /:/;
 export const DOT = /\./;
 export const AT = /@/;
 export const ARROW = /->/;
+export const SEMICOLON = /;/;
 
 // Bitwise and symbolic delimiters
 export const TILDE = /~/;
@@ -119,7 +87,7 @@ export const RSHIFT = />>/;
  * - |  (PIPE)
  * - ^  (CARET)
  */
-export const DELIMITER_REGEX_EXP = /^(?:->|<<|>>|\(|\)|\[|\]|\{|\}|,|:|\.|@|~|&|\||\^)$/;
+export const DELIMITER_REGEX_EXP = /^(?:->|<<|>>|\(|\)|\[|\]|\{|\}|,|:|;|\.|@|~|&|\||\^)$/;
 
 /**
  * Combined delimiter regex patterns for easier access.
@@ -134,6 +102,7 @@ export const delimiters = {
   RBRACE,
   COMMA,
   COLON,
+  SEMICOLON,
   DOT,
   AT,
   ARROW,
@@ -160,6 +129,7 @@ export const delimiterList = [
   { name: "RBRACE", pattern: RBRACE },
   { name: "COMMA", pattern: COMMA },
   { name: "COLON", pattern: COLON },
+  { name: "SEMICOLON", pattern: SEMICOLON },
   { name: "DOT", pattern: DOT },
   { name: "AT", pattern: AT },
   { name: "TILDE", pattern: TILDE },
@@ -191,39 +161,11 @@ export const indentationList = [
   { name: "DEDENT", pattern: DEDENT },
 ];
 
-// Function definition
+// Grammar keywords / reserved identifiers
 export const DEF = /\bdef\b/;
-
-// Return statement
-export const RETURN = /\breturn\b/;
-
-// Conditional statements
-export const IF = /\bif\b/;
-export const ELSE = /\belse\b/;
-export const ELIF = /\belif\b/;
-
-// Loops
-export const FOR = /\bfor\b/;
-export const WHILE = /\bwhile\b/;
-
-// Membership and identity operators
-export const IN = /\bin\b/;
-export const IS = /\bis\b/;
-
-// Logical operators
-export const AND = /\band\b/;
-export const OR = /\bor\b/;
-export const NOT = /\bnot\b/;
-
-// Boolean and None literals
-export const TRUE = /\bTrue\b/;
-export const FALSE = /\bFalse\b/;
-export const NONE = /\bNone\b/;
-
-// Control flow statements
-export const PASS = /\bpass\b/;
-export const BREAK = /\bbreak\b/;
-export const CONTINUE = /\bcontinue\b/;
+export const TRITON = /\btriton\b/;
+export const JIT = /\bjit\b/;
+export const CONSTEXPR = /\bconstexpr\b/;
 
 /**
  * Single regex expression for every supported keyword.
@@ -248,8 +190,7 @@ export const CONTINUE = /\bcontinue\b/;
  * - break (BREAK)
  * - continue (CONTINUE)
  */
-export const KEYWORD_REGEX_EXP =
-  /^(?:def|return|if|else|elif|for|while|in|is|and|or|not|True|False|None|pass|break|continue)$/;
+export const KEYWORD_REGEX_EXP = /^(?:def|triton|jit|constexpr)$/;
 
 /**
  * Combined keyword regex patterns for easier access.
@@ -257,23 +198,9 @@ export const KEYWORD_REGEX_EXP =
 export const keywords = {
   KEYWORD: KEYWORD_REGEX_EXP,
   DEF,
-  RETURN,
-  IF,
-  ELSE,
-  ELIF,
-  FOR,
-  WHILE,
-  IN,
-  IS,
-  AND,
-  OR,
-  NOT,
-  TRUE,
-  FALSE,
-  NONE,
-  PASS,
-  BREAK,
-  CONTINUE,
+  TRITON,
+  JIT,
+  CONSTEXPR,
 };
 
 /**
@@ -281,23 +208,9 @@ export const keywords = {
  */
 export const keywordList = [
   { name: "DEF", pattern: DEF },
-  { name: "RETURN", pattern: RETURN },
-  { name: "IF", pattern: IF },
-  { name: "ELSE", pattern: ELSE },
-  { name: "ELIF", pattern: ELIF },
-  { name: "FOR", pattern: FOR },
-  { name: "WHILE", pattern: WHILE },
-  { name: "IN", pattern: IN },
-  { name: "IS", pattern: IS },
-  { name: "AND", pattern: AND },
-  { name: "OR", pattern: OR },
-  { name: "NOT", pattern: NOT },
-  { name: "TRUE", pattern: TRUE },
-  { name: "FALSE", pattern: FALSE },
-  { name: "NONE", pattern: NONE },
-  { name: "PASS", pattern: PASS },
-  { name: "BREAK", pattern: BREAK },
-  { name: "CONTINUE", pattern: CONTINUE },
+  { name: "TRITON", pattern: TRITON },
+  { name: "JIT", pattern: JIT },
+  { name: "CONSTEXPR", pattern: CONSTEXPR },
 ];
 
 /**

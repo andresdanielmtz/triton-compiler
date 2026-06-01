@@ -3,27 +3,21 @@
  */
 const GRAMMAR = `
 Program -> Kernel EOF
-Kernel -> Decorator FunctionDefinition
+Kernel -> Decorator KernelDefinition
 Decorator -> "@" "triton" "." "jit"
-FunctionDefinition -> "def" ID "(" ParamList ")" ":" Block
+KernelDefinition -> "def" ID "(" ParamList ")" ":" Block
 ParamList -> ε | Param ("," Param)*
 Param -> ID (":" "tl" "." "constexpr")?
 Block -> "{" Statement* "}"
-Statement -> VariableAssignment ";" | ExpressionStatement ";"
-VariableAssignment -> ID AssignmentOperator Expression
-AssignmentOperator -> "=" | "+=" | "-=" | "*=" | "/="
-ExpressionStatement -> Expression
-Expression -> Comparison
-Comparison -> Term (ComparisonOperator Term)*
-ComparisonOperator -> "<" | ">" | "<=" | ">=" | "==" | "!="
-Term -> Factor (ArithmeticOperatorLevelOne Factor)*
-ArithmeticOperatorLevelOne -> "+" | "-"
-Factor -> Primary (ArithmeticOperatorLevelTwo Primary)*
-ArithmeticOperatorLevelTwo -> "*" | "/" | "%"
-Primary -> ID | NUMBER | STRING | FunctionCall | MemberExpression | "(" Expression ")"
-MemberExpression -> ID "." ID
-FunctionCall -> (MemberExpression | ID) "(" (Arg ("," Arg)*)? ")"
-Arg -> (ID "=")? Expression
+Statement -> VariableAssignment | ExpressionStatement
+VariableAssignment -> ID "=" Expression ";"
+ExpressionStatement -> Expression ";"
+Expression -> Term (ArithmeticOperatorLevelOne Term)*
+ArithmeticOperatorLevelOne -> "+"|"-"
+Term -> Factor (ArithmeticOperatorLevelTwo Factor)*
+ArithmeticOperatorLevelTwo -> "*"| "/"
+Factor -> NUMBER | "("Expression")" | NameOrCall
+NameOrCall -> ID "." ID "(" (Expression ("," Expression)*)? ")" | ID ("(" (Expression ("," Expression)*)? ")")?
 `;
 
 export default GRAMMAR;

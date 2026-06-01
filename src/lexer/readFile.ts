@@ -5,7 +5,7 @@ import { DELIMITER_REGEX_EXP, KEYWORD_REGEX_EXP, NEWLINE, OPERATOR_REGEX_EXP } f
 import { matchTransitionTableToken } from "./constants/transitionTable";
 
 const TWO_CHARACTER_TOKENS = new Set(["//", "**", "<=", ">=", "==", "!=", "+=", "-=", "*=", "/=", "->", "<<", ">>"]);
-const SINGLE_CHARACTER_TOKENS = new Set(["+", "-", "*", "/", "%", "<", ">", "=", "(", ")", "[", "]", "{", "}", ",", ":", ".", "@", "#", "~", "&", "|", "^"]);
+const SINGLE_CHARACTER_TOKENS = new Set(["+", "-", "*", "/", "%", "<", ">", "=", "(", ")", "[", "]", "{", "}", ",", ":", ";", ".", "@", "#", "~", "&", "|", "^"]);
 
 const isWhitespace = (character: string): boolean => /\s/.test(character);
 const isDigit = (character: string): boolean => /^\d$/.test(character);

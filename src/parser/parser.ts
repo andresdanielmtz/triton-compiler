@@ -9,19 +9,15 @@ import {
   ExpressionStatementNode,
   BinaryExpressionNode,
   FunctionCallNode,
-  KeywordArgNode,
   IdentifierNode,
   NumberLiteralNode,
-  StringLiteralNode,
   MemberExpressionNode,
 } from "./constants/ast";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const ASSIGNMENT_OPERATORS = new Set(["=", "+=", "-=", "*=", "/="]);
-const ARITHMETIC_L1 = new Set(["+", "-"]);         // lower precedence
-const ARITHMETIC_L2 = new Set(["*", "/", "%"]);    // higher precedence
-const COMPARISON_OPS = new Set(["<", ">", "<=", ">=", "==", "!="]);
+const ARITHMETIC_L1 = new Set(["+", "-"]);      // lower precedence
+const ARITHMETIC_L2 = new Set(["*", "/"]);      // higher precedence
 
 // ─── Parser Class ─────────────────────────────────────────────────────────────
 
@@ -102,56 +98,57 @@ export class Parser {
 
   // ── Entry Point ─────────────────────────────────────────────────────────────
 
-  /**
-   * Program -> (non-kernel-preamble)* KernelDefinition* EOF
-   *
-   * Skips import statements and any other top-level code that precedes
-   * a @triton.jit decorator. Only nodes that start with "@" are parsed
-   * as kernel definitions; everything else is consumed and discarded.
-   */
+  /** Program -> Kernel EOF */
   parse(): ProgramNode {
-    const body: ASTNode[] = [];
-
-    while (!this.isAtEnd()) {
-      if (this.check("@")) {
-        body.push(this.parseKernelDefinition());
-      } else {
-        // Skip tokens that belong to import lines or other preamble
-        // until we hit the next "@" or EOF.
-        this.advance();
-      }
+    const kernel = this.parseKernel();
+    if (!this.isAtEnd()) {
+      const t = this.peek();
+      throw new SyntaxError(
+        `Unexpected trailing token "${t?.value ?? "EOF"}" ` +
+          `at line ${t?.line}, column ${t?.column}`
+      );
     }
-
-    return { type: "Program", body };
+    return { type: "Program", body: [kernel] };
   }
 
   // ── Kernel ──────────────────────────────────────────────────────────────────
 
-  /**
-   * KernelDefinition -> Decorator "def" ID "(" ParamList ")" ":" Block
-   */
-  private parseKernelDefinition(): KernelDefinitionNode {
-    // Decorator: @triton.jit
-    this.expect("@");
-    const decoratorObj = this.advance().value;   // "triton"
-    this.expect(".");
-    const decoratorProp = this.advance().value;  // "jit"
-    const decorator = `@${decoratorObj}.${decoratorProp}`;
+  /** Kernel -> Decorator KernelDefinition */
+  private parseKernel(): KernelDefinitionNode {
+    const decorator = this.parseDecorator();
+    const defn = this.parseKernelDefinition();
+    return { ...defn, decorator };
+  }
 
-    // def <name>
+  /** Decorator -> "@" "triton" "." "jit" */
+  private parseDecorator(): string {
+    this.expect("@");
+    this.expect("triton");
+    this.expect(".");
+    this.expect("jit");
+    return "@triton.jit";
+  }
+
+  /** KernelDefinition -> "def" ID "(" ParamList ")" ":" Block */
+  private parseKernelDefinition(): Omit<KernelDefinitionNode, "decorator"> {
     this.expect("def");
+    const nameToken = this.peek();
+    if (nameToken?.type !== "IDENTIFIER") {
+      throw new SyntaxError(
+        `Expected kernel name (ID) but got "${nameToken?.value ?? "EOF"}" ` +
+          `at line ${nameToken?.line}, column ${nameToken?.column}`
+      );
+    }
     const name = this.advance().value;
 
-    // ( ParamList )
     this.expect("(");
     const params = this.parseParamList();
     this.expect(")");
     this.expect(":");
 
-    // Block (indent-delimited — we use implicit block via remaining tokens)
     const body = this.parseBlock();
 
-    return { type: "KernelDefinition", decorator, name, params, body };
+    return { type: "KernelDefinition", name, params, body };
   }
 
   // ── Parameters ──────────────────────────────────────────────────────────────
@@ -210,27 +207,17 @@ export class Parser {
     return { type: "Block", statements };
   }
 
-  /** True when the next token begins a new kernel (@). */
-  private isNewKernelStart(): boolean {
-    return this.peek()?.value === "@";
-  }
-
   /**
    * Statement -> VariableAssignment | ExpressionStatement
-   *
-   * Disambiguation:  ID  =  …   → assignment
-   *                  ID  .  …   → expression (member call)
-   *                  ID  (  …   → expression (call)
    */
   private parseStatement(): ASTNode {
     const cur = this.peek();
     const next = this.peekAt(1);
 
-    // ID followed by an assignment operator → VariableAssignment
+    // VariableAssignment -> ID "=" Expression ";"
     if (
       cur?.type === "IDENTIFIER" &&
-      next?.type === "OPERATOR" &&
-      ASSIGNMENT_OPERATORS.has(next.value)
+      next?.value === "="
     ) {
       return this.parseVariableAssignment();
     }
@@ -244,7 +231,7 @@ export class Parser {
    */
   private parseVariableAssignment(): VariableAssignmentNode {
     const name = this.advance().value;
-    const operator = this.advance().value; // "=", "+=", etc.
+    const operator = this.expect("=").value;
     const right = this.parseExpression();
     this.expect(";");
 
@@ -267,20 +254,11 @@ export class Parser {
 
   // ── Expressions (precedence climbing) ──────────────────────────────────────
 
-  /**
-   * Expression -> Comparison (handles +, -, *, /, <, >, ==, etc.)
-   */
+  /** Expression -> Term (ArithmeticOperatorLevelOne Term)* */
   private parseExpression(): ASTNode {
-    return this.parseComparison();
-  }
-
-  /**
-   * Comparison -> Term (ComparisonOp Term)*
-   */
-  private parseComparison(): ASTNode {
     let left = this.parseTerm();
 
-    while (!this.isAtEnd() && COMPARISON_OPS.has(this.peek()?.value)) {
+    while (!this.isAtEnd() && ARITHMETIC_L1.has(this.peek()?.value)) {
       const operator = this.advance().value;
       const right = this.parseTerm();
       left = { type: "BinaryExpression", operator, left, right } as BinaryExpressionNode;
@@ -289,13 +267,11 @@ export class Parser {
     return left;
   }
 
-  /**
-   * Term -> Factor (("+"|"-") Factor)*
-   */
+  /** Term -> Factor (ArithmeticOperatorLevelTwo Factor)* */
   private parseTerm(): ASTNode {
     let left = this.parseFactor();
 
-    while (!this.isAtEnd() && ARITHMETIC_L1.has(this.peek()?.value)) {
+    while (!this.isAtEnd() && ARITHMETIC_L2.has(this.peek()?.value)) {
       const operator = this.advance().value;
       const right = this.parseFactor();
       left = { type: "BinaryExpression", operator, left, right } as BinaryExpressionNode;
@@ -304,115 +280,95 @@ export class Parser {
     return left;
   }
 
-  /**
-   * Factor -> Unary (("*"|"/") Unary)*
-   */
+  /** Factor -> NUMBER | "(" Expression ")" | NameOrCall */
   private parseFactor(): ASTNode {
-    let left = this.parsePrimary();
-
-    while (!this.isAtEnd() && ARITHMETIC_L2.has(this.peek()?.value)) {
-      const operator = this.advance().value;
-      const right = this.parsePrimary();
-      left = { type: "BinaryExpression", operator, left, right } as BinaryExpressionNode;
-    }
-
-    return left;
-  }
-
-  // ── Primary ─────────────────────────────────────────────────────────────────
-
-  /**
-   * Primary -> NUMBER | STRING | FunctionCall | MemberExpression | Identifier
-   *
-   * Handles:
-   *   tl.arange(0, BLOCK_SIZE)   → FunctionCall   (callee = MemberExpression)
-   *   tl.load(ptr, mask=mask)    → FunctionCall   (with KeywordArgs)
-   *   pid                        → Identifier
-   *   42                         → NumberLiteral
-   */
-  private parsePrimary(): ASTNode {
-    // Parenthesized expression: "(" Expression ")"
+    // Parenthesized expression
     if (this.check("(")) {
-      this.advance();                    // consume "("
+      this.advance();
       const expr = this.parseExpression();
-      this.expect(")");                  // consume ")"
+      this.expect(")");
       return expr;
     }
 
     const token = this.peek();
 
-    // Number literal
-    if (token.type === "NUMBER") {
+    if (token?.type === "NUMBER") {
       this.advance();
       return { type: "NumberLiteral", value: Number(token.value) } as NumberLiteralNode;
     }
 
-    // String literal
-    if (token.type === "STRING") {
+    return this.parseNameOrCall();
+  }
+
+  /**
+   * NameOrCall ->
+   *   ID "." ID "(" (Expression ("," Expression)*)? ")"
+   * | ID ("(" (Expression ("," Expression)*)? ")")?
+   */
+  private parseNameOrCall(): ASTNode {
+    const token = this.peek();
+    if (token?.type !== "IDENTIFIER") {
+      throw new SyntaxError(
+        `Expected name (ID) but got "${token?.value ?? "EOF"}" ` +
+          `at line ${token?.line}, column ${token?.column}`
+      );
+    }
+
+    const first = this.advance().value;
+
+    // Member call: ID "." ID "(" ... ")"
+    if (this.check(".")) {
       this.advance();
-      // Strip surrounding quotes
-      const raw = token.value.replace(/^["']|["']$/g, "");
-      return { type: "StringLiteral", value: raw } as StringLiteralNode;
-    }
+      const secondTok = this.peek();
+      if (secondTok?.type !== "IDENTIFIER") {
+        throw new SyntaxError(
+          `Expected member name (ID) but got "${secondTok?.value ?? "EOF"}" ` +
+            `at line ${secondTok?.line}, column ${secondTok?.column}`
+        );
+      }
+      const second = this.advance().value;
 
-    // Identifier — could become a MemberExpression or FunctionCall
-    if (token.type === "IDENTIFIER") {
-      const name = this.advance().value;
-
-      // Member access:  name "." property
-      if (this.check(".")) {
-        this.advance(); // consume "."
-        const property = this.advance().value;
-
-        const member: MemberExpressionNode = {
-          type: "MemberExpression",
-          object: name,
-          property,
-        };
-
-        // Function call:  name.property "(" args ")"
-        if (this.check("(")) {
-          return this.parseFunctionCall(member);
-        }
-
-        return member;
+      // Grammar requires a call after member selection
+      if (!this.check("(")) {
+        const t = this.peek();
+        throw new SyntaxError(
+          `Expected "(" after "${first}.${second}" but got "${t?.value ?? "EOF"}" ` +
+            `at line ${t?.line}, column ${t?.column}`
+        );
       }
 
-      // Plain function call:  name "(" args ")"
-      if (this.check("(")) {
-        const callee: IdentifierNode = { type: "Identifier", name };
-        return this.parseFunctionCall(callee);
-      }
+      const member: MemberExpressionNode = {
+        type: "MemberExpression",
+        object: first,
+        property: second,
+      };
 
-      // Plain identifier
-      return { type: "Identifier", name } as IdentifierNode;
+      return this.parseFunctionCall(member);
     }
 
-    throw new SyntaxError(
-      `Unexpected token "${token.value}" (${token.type}) ` +
-        `at line ${token.line}, column ${token.column}`
-    );
+    // Optional call: ID "(" ... ")"
+    if (this.check("(")) {
+      const callee: IdentifierNode = { type: "Identifier", name: first };
+      return this.parseFunctionCall(callee);
+    }
+
+    return { type: "Identifier", name: first } as IdentifierNode;
   }
 
   // ── Function Calls ──────────────────────────────────────────────────────────
 
-  /**
-   * FunctionCall -> callee "(" ArgList ")"
-   *
-   * ArgList -> ε | Arg ("," Arg)*
-   * Arg     -> (ID "=")? Expression        ← positional or keyword
-   */
+  /** FunctionCall -> callee "(" (Expression ("," Expression)*)? ")" */
   private parseFunctionCall(callee: ASTNode): FunctionCallNode {
     this.expect("(");
     const args: ASTNode[] = [];
 
     if (!this.check(")")) {
-      args.push(this.parseArg());
+      args.push(this.parseExpression());
 
       while (this.check(",")) {
         this.advance(); // consume ","
         if (this.check(")")) break; // trailing comma
-        args.push(this.parseArg());
+        args.push(this.parseExpression());
       }
     }
 
@@ -420,28 +376,5 @@ export class Parser {
     return { type: "FunctionCall", callee, args };
   }
 
-  /**
-   * Arg -> (ID "=")? Expression
-   *
-   * Keyword arg detection: ID followed immediately by "=" that is NOT
-   * part of a comparison operator (!=, ==, >=, <=).
-   */
-  private parseArg(): ASTNode {
-    const cur = this.peek();
-    const next = this.peekAt(1);
-
-    const isKeyword =
-      cur?.type === "IDENTIFIER" &&
-      next?.type === "OPERATOR" &&
-      next?.value === "=";
-
-    if (isKeyword) {
-      const key = this.advance().value;
-      this.advance(); // "="
-      const value = this.parseExpression();
-      return { type: "KeywordArg", key, value } as KeywordArgNode;
-    }
-
-    return this.parseExpression();
-  }
+  // (No keyword-args in the provided grammar)
 }

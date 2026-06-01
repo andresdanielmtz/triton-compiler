@@ -9,10 +9,8 @@ export type ASTNode =
   | ExpressionStatementNode
   | BinaryExpressionNode
   | FunctionCallNode
-  | KeywordArgNode
   | IdentifierNode
   | NumberLiteralNode
-  | StringLiteralNode
   | MemberExpressionNode;
 
 export interface ProgramNode {
@@ -64,12 +62,6 @@ export interface FunctionCallNode {
   args: ASTNode[];
 }
 
-export interface KeywordArgNode {
-  type: "KeywordArg";
-  key: string;
-  value: ASTNode;
-}
-
 export interface MemberExpressionNode {
   type: "MemberExpression";
   object: string;
@@ -84,9 +76,4 @@ export interface IdentifierNode {
 export interface NumberLiteralNode {
   type: "NumberLiteral";
   value: number;
-}
-
-export interface StringLiteralNode {
-  type: "StringLiteral";
-  value: string;
 }

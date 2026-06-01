@@ -1,43 +1,6 @@
 import { TOKEN_TYPE } from "./tokens";
 import { Automaton, DIGIT, LETTER, STRING_CHARACTER, TransitionTable, matchAutomataToken } from "./automaton";
 
-/**
- * Automaton that recognizes the `while` keyword using a single transition chain.
- */
-const WHILE_KEYWORD_AUTOMATON: Automaton = {
-  name: "WHILE_KEYWORD",
-  tokenType: TOKEN_TYPE.KEYWORD,
-  startState: "START",
-  acceptStates: ["WHILE"],
-  transitions: {
-    START: { w: "W" },
-    W: { h: "WH" },
-    WH: { i: "WHI" },
-    WHI: { l: "WHIL" },
-    WHIL: { e: "WHILE" },
-    WHILE: {},
-  },
-};
-
-/**
- * Automaton that recognizes the `if`, `else`, and `elif` keywords.
- * All successful paths finish in the same `END` accept state.
- */
-const CONDITIONAL_KEYWORD_AUTOMATON: Automaton = {
-  name: "CONDITIONAL_KEYWORD",
-  tokenType: TOKEN_TYPE.KEYWORD,
-  startState: "START",
-  acceptStates: ["END"],
-  transitions: {
-    START: { i: "I", e: "E" },
-    I: { f: "END" },
-    E: { l: "EL" },
-    EL: { s: "ELS", i: "ELI" },
-    ELS: { e: "END" },
-    ELI: { f: "END" },
-    END: {},
-  },
-};
 
 /**
  * Automaton that recognizes identifier names that start with a letter or underscore.
@@ -105,8 +68,6 @@ const ARITHMETIC_OPERATOR_AUTOMATON: Automaton = {
  * Ordered collection of transition-table automata used by the lexer before regex fallback.
  */
 const tokenAutomata: readonly Automaton[] = [
-  WHILE_KEYWORD_AUTOMATON,
-  CONDITIONAL_KEYWORD_AUTOMATON,
   NAME_AUTOMATON,
   NUMBER_AUTOMATON,
   STRING_AUTOMATON,
@@ -123,11 +84,9 @@ export const matchTransitionTableToken = (sourceInput: string): TOKEN_TYPE | und
 
 export {
   ARITHMETIC_OPERATOR_AUTOMATON,
-  CONDITIONAL_KEYWORD_AUTOMATON,
   NAME_AUTOMATON,
   NUMBER_AUTOMATON,
   STRING_AUTOMATON,
-  WHILE_KEYWORD_AUTOMATON,
   tokenAutomata,
 };
 export type { Automaton, TransitionTable };
