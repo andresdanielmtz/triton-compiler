@@ -93,6 +93,12 @@ def k(x, out, BS: tl.constexpr): {
 // INVALID KERNELS
 // ─────────────────────────────────────────────────────────────
 
+test("invalid: missing kernel decorator", () => {
+  expectInvalid(`
+def no_decorator(x): { y = x + 1; }
+`);
+});
+
 test("invalid: missing block braces", () => {
   expectInvalid(`
 @triton.jit
