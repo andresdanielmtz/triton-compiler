@@ -8,6 +8,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm run build-lexer && node --test dist/lexer/tests/**/*.test.js",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "build": "npm run build-lexer && npm run build-parser",
     "build-lexer": "tsc -p tsconfig.lexer.json",
     "build-parser": "tsc -p tsconfig.parser.json",
