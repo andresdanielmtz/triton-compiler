@@ -1,18 +1,25 @@
 # Triton Compiler
 
 A Triton compiler implemented in TypeScript. The project is structured into two main components:
-- **Lexer**: implemented and tested
-- **Parser**: currently being implemented
+- **Lexer**
+- **Parser**
 
 Original Lexer implementation got made in [this repo](https://github.com/andresdanielmtz/TC3002B-Lexer), but it was moved here to be part of the same project as the other parts of the compiler.
 
-## Getting started
+## Scripts
 
+### Getting started
+
+Since it is a NodeJS project, feel free to just use `npm` to install dependencies and run scripts. If you prefer using `yarn` or `pnpm`, you can adjust the commands accordingly.
 ```bash
 npm i
 ```
 
-## Scripts
+---
+
+### Run the project
+
+If you want to check the entire pipeline, feel free to use `npm run pipeline` to build and run the lexer and parser in sequence. However, for development purposes, you can use the following commands to build and run each component separately:
 
 | Description | Command |
 | --- | --- |
@@ -21,7 +28,8 @@ npm i
 | Build parser only (emits to `dist/parser`) | `npm run build-parser` |
 | Run lexer | `npm run start-lexer` |
 | Build + run lexer (quick local loop) | `npm run dev-lexer` |
-| Print lexer tokens | `npm run tokens-lexer` |
+| Print lexer tokens and store them | `npm run tokens-lexer` |
+| Clean build artifacts | `npm run clean` |
 
 ## Input
 
@@ -31,6 +39,7 @@ See `/input` for sample Triton files.
 
 ## Project Structure
 
+To-do: Add more details about the project structure, but for now, here is a high-level overview of the directory layout:
 ```text
 .
 ├── input/
@@ -59,7 +68,7 @@ npm run test
 
 ## Tests
 
-The project uses Node's built-in test runner. The lexer tests are written in TypeScript under `src/lexer/tests/`, compiled to `dist/lexer/tests/`, and then executed from the compiled output.
+The project uses Node's built-in test runner. The lexer tests are written in TypeScript under `src/lexer/tests/` and `src/parser/tests/`, compiled to `dist/lexer/tests/` and `dist/parser/tests/`, and then executed from the compiled output.
 
 Run them with:
 
@@ -68,3 +77,4 @@ npm test
 ```
 
 The current test case checks the lexer output for a small Triton-like snippet and verifies that token types, values, line numbers, and column numbers are preserved correctly.
+It also checks for the parser to correctly build an AST from the same input.
