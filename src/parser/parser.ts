@@ -329,6 +329,14 @@ export class Parser {
    *   42                         → NumberLiteral
    */
   private parsePrimary(): ASTNode {
+    // Parenthesized expression:  "(" Expression ")"
+    if (this.check("(")) {
+        this.advance();
+        const expression = this.parseExpression();
+        this.expect(")");
+        return expression;
+    }
+
     const token = this.peek();
 
     // Number literal
